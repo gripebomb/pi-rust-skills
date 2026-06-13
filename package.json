@@ -1,6 +1,6 @@
 {
   "name": "pi-rust-skills",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rust programming skills and a lightweight Rust project context tool for Pi Coding Agent.",
   "type": "module",
   "license": "MIT",
