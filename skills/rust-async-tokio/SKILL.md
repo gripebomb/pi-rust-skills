@@ -11,11 +11,12 @@ Use this skill when implementing or reviewing async Rust, especially Tokio servi
 
 ## Workflow
 
-1. Confirm whether async is actually needed. Do not add Tokio for simple CPU-bound or synchronous CLI work.
-2. Identify runtime boundaries: binary entry point, library API, spawned tasks, blocking sections, and shutdown path.
-3. Ensure every task has ownership, cancellation, and error reporting strategy.
-4. Check that `.await` points do not hold mutex guards, borrowed temporaries, or other resources longer than intended.
-5. Add integration tests for cancellation, timeout, and error paths.
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Confirm whether async is actually needed. Do not add Tokio for simple CPU-bound or synchronous CLI work.
+3. Identify runtime boundaries: binary entry point, library API, spawned tasks, blocking sections, and shutdown path.
+4. Ensure every task has ownership, cancellation, supervision, and error reporting strategy.
+5. Check that `.await` points do not hold mutex guards, borrowed temporaries, or other resources longer than intended.
+6. Add integration tests for cancellation, timeout, graceful shutdown, and error paths.
 
 ## Tokio rules
 
@@ -25,6 +26,13 @@ Use this skill when implementing or reviewing async Rust, especially Tokio servi
 - Prefer `JoinSet` for supervising groups of tasks.
 - Prefer bounded channels for producer/consumer systems.
 - Avoid `std::sync::Mutex` in async code when lock contention crosses `.await`; use `tokio::sync::Mutex` carefully or restructure ownership.
+
+## Observability
+
+- Use `tracing` spans around request, worker, queue, and task boundaries.
+- Report task failures explicitly; do not detach tasks that can fail silently.
+- Track queue depth, timeouts, retries, and shutdown duration when operating a service.
+- Include enough context in errors to identify the runtime boundary that failed.
 
 ## Graceful shutdown pattern
 
@@ -60,8 +68,9 @@ Use `tokio-util` only if the project already accepts that dependency or cancella
 ## Testing
 
 ```bash
-cargo test --all-features
-cargo clippy --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+cargo test -p crate_name async_test_name -- --nocapture
+cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 Use timeouts in tests to avoid hangs:
@@ -70,6 +79,14 @@ Use timeouts in tests to avoid hangs:
 tokio::time::timeout(Duration::from_secs(1), operation()).await??;
 ```
 
+Use `tokio::time::pause` and `advance` for timer-heavy code. Prefer channels, cancellation tokens, and controlled clocks over sleeps.
+
 ## Output expectations
 
 Explain task ownership, cancellation behavior, backpressure, and validation commands. Flag any blocking or lock-across-await risks explicitly.
+
+## Avoid
+
+- Do not spawn untracked background tasks.
+- Do not run blocking I/O or CPU-heavy work on executor worker threads.
+- Do not use unbounded channels or unlimited task spawning when producers can outrun consumers.

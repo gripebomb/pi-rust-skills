@@ -6,5 +6,6 @@ npm-debug.log*
 target/
 coverage/
 docs/
+docs/plans/
 .worktrees
 .worktrees/

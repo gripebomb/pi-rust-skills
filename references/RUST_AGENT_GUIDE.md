@@ -13,8 +13,13 @@ This package is designed to make Pi Coding Agent better at Rust work without for
    - Tests: `/skill:rust-testing`
    - Async: `/skill:rust-async-tokio`
    - CLI: `/skill:rust-cli`
+   - Web APIs: `/skill:rust-web-api`
+   - Database work: `/skill:rust-database`
    - WASM: `/skill:rust-wasm`
    - FFI: `/skill:rust-ffi`
+   - Embedded/no_std: `/skill:rust-embedded-no-std`
+   - Proc macros: `/skill:rust-proc-macro`
+   - Build scripts/cross-compilation: `/skill:rust-build-cross`
    - Performance: `/skill:rust-performance`
    - Security: `/skill:rust-security-audit`
    - Publishing crates: `/skill:rust-crate-publishing`

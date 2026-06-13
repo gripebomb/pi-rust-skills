@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Expanded all existing Rust skills with project-context discovery, workspace-aware validation, and domain-specific safety guidance.
+- Added Rust skills for web APIs, databases, embedded/no_std, procedural macros, and build/cross-compilation.
+- Updated README skill selection guidance and example prompts for all bundled skills.
+
 ## 0.1.0
 
 - Initial npm-ready Pi package bootstrap.

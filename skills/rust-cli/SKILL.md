@@ -11,11 +11,12 @@ Use this skill for Rust command-line tools, developer utilities, admin tools, an
 
 ## Workflow
 
-1. Define the CLI contract first: commands, flags, input/output, exit codes, and config precedence.
-2. Keep `main.rs` thin. Put real logic in library modules that tests can call directly.
-3. Use structured errors internally and user-friendly messages at the CLI boundary.
-4. Add integration tests that execute the binary for critical commands.
-5. Validate behavior on paths with spaces and platform-specific path separators.
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Define the CLI contract first: commands, flags, input/output, exit codes, and config precedence.
+3. Keep `main.rs` thin. Put real logic in library modules that tests can call directly.
+4. Use structured errors internally and user-friendly messages at the CLI boundary.
+5. Add integration tests that execute the binary for critical commands.
+6. Validate behavior on paths with spaces and platform-specific path separators.
 
 ## Recommended layout
 
@@ -60,6 +61,14 @@ pub enum Command {
 - Use `tracing` or `log` for diagnostics, not normal output.
 - Keep stdout machine-readable when the command is designed for scripting.
 
+## CLI contract
+
+- Document config precedence, usually flags, environment, config file, then defaults.
+- Reserve stdout for primary output and stderr for diagnostics, progress, and errors.
+- Define stable exit codes for success, usage/config errors, input errors, and internal failures.
+- Respect TTY behavior: color, progress bars, prompts, and paging should be disabled or configurable in non-interactive mode.
+- Generate shell completions and manpages when the tool is meant for broad distribution.
+
 ## Testing commands
 
 Useful dev dependencies:
@@ -81,15 +90,24 @@ fn prints_help() {
 }
 ```
 
+Add golden output tests for stable help, JSON, or text output. Keep golden files small and review intentional changes.
+
 ## Validation
 
 ```bash
 cargo fmt
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+cargo test -p crate_name --test cli
 cargo run -- --help
 ```
 
 ## Output expectations
 
 Document the CLI contract, files changed, example invocations, and any future packaging steps such as shell completions, manpages, Homebrew, Scoop, or cargo-binstall.
+
+## Avoid
+
+- Do not mix diagnostics into machine-readable stdout.
+- Do not make config precedence implicit.
+- Do not add hidden panics for invalid user input.

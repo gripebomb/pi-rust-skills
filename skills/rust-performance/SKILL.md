@@ -11,11 +11,12 @@ Use this skill when the user asks to speed up Rust code, reduce allocations, shr
 
 ## Workflow
 
-1. Define the performance goal and workload.
-2. Measure before changing code.
-3. Look for algorithmic improvements before micro-optimizations.
-4. Make one change at a time and compare results.
-5. Preserve readability unless the measured gain justifies complexity.
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Define the performance goal, workload, baseline command, and acceptable tradeoffs.
+3. Measure before changing code.
+4. Look for algorithmic improvements before micro-optimizations.
+5. Make one change at a time and compare results.
+6. Preserve readability unless the measured gain justifies complexity.
 
 ## Measurement commands
 
@@ -23,6 +24,7 @@ Use this skill when the user asks to speed up Rust code, reduce allocations, shr
 cargo test --release
 cargo bench
 cargo build --release
+cargo test -p crate_name --release
 ```
 
 Optional tools when installed:
@@ -42,6 +44,16 @@ criterion = "0.5"
 [[bench]]
 name = "throughput"
 harness = false
+```
+
+Record results in a compact form:
+
+```text
+workload: parse 10 MB fixture
+baseline: 125 ms median, 12.4 MB allocated
+change: reuse parse buffer
+after: 88 ms median, 4.1 MB allocated
+tradeoff: parser state is now explicit
 ```
 
 ## Common Rust performance checks
@@ -67,6 +79,8 @@ panic = "abort"
 
 Review dependencies and features before adding size-focused profile settings.
 
+Measure before and after with `cargo bloat --release --crates`, `twiggy`, or artifact size checks when available.
+
 ## Async throughput
 
 - Look for blocking calls on executor workers.
@@ -74,7 +88,14 @@ Review dependencies and features before adding size-focused profile settings.
 - Batch small operations when safe.
 - Avoid unbounded task spawning.
 - Use `tracing` to find slow spans.
+- Measure throughput, tail latency, queue depth, and cancellation behavior under realistic concurrency.
 
 ## Output expectations
 
 Provide baseline measurement, change made, new measurement, tradeoffs, and commands used. If no measurement is possible, clearly label recommendations as hypotheses.
+
+## Avoid
+
+- Do not optimize without a baseline unless clearly labeled as a hypothesis.
+- Do not trade away correctness, cancellation, or public API clarity for unmeasured gains.
+- Do not add profile settings before checking dependency and feature bloat.

@@ -11,10 +11,11 @@ Use this skill for Rust pull request review, local code audit, bug-risk review, 
 
 ## Workflow
 
-1. Gather context. Read `Cargo.toml`, changed files, public APIs, tests, and any failure logs.
+1. Gather context. Read `Cargo.toml`, workspace shape, feature flags, target crates, changed files, public APIs, tests, and any failure logs. Use `rust_project_context` when available.
 2. Run or request validation commands where practical:
    ```bash
    cargo fmt --check
+   cargo check --workspace --all-targets --all-features
    cargo clippy --all-targets --all-features -- -D warnings
    cargo test --all-features
    ```
@@ -27,6 +28,12 @@ Use this skill for Rust pull request review, local code audit, bug-risk review, 
    - Tests and documentation.
 4. Prefer actionable patches over broad commentary.
 5. Do not suggest adding dependencies unless they simplify real complexity or reduce risk.
+
+## Severity guide
+
+- High: soundness, security, data loss, panics on normal input, or broken public contracts.
+- Medium: incorrect edge cases, cancellation/resource leaks, portability bugs, or missing tests for risky behavior.
+- Low: maintainability, clarity, docs, or style issues that do not change behavior.
 
 ## Rust-specific checklist
 
@@ -63,10 +70,18 @@ Use this skill for Rust pull request review, local code audit, bug-risk review, 
 - Public APIs should use clear types, minimal generics, and docs with examples.
 - Prefer `AsRef<Path>` for path-like inputs and `impl Into<String>` sparingly.
 - Avoid exposing concrete dependency types unless they are part of the intended contract.
+- Check MSRV, edition, feature flags, and semver compatibility before recommending public API changes.
+- Treat public type names, trait bounds, error variants, feature defaults, and re-exports as compatibility surface.
+
+### Feature and workspace coverage
+
+- Review feature-gated code with `--all-features` and the default feature set when both matter.
+- For workspaces, identify the affected package and run `cargo check -p crate_name --all-targets --all-features` when the full suite is too broad.
+- Check generated code, proc macro expansion, and build scripts when the diff touches them.
 
 ## Review output format
 
-Use this structure:
+Lead with findings. Use this structure:
 
 ```markdown
 ## Summary
@@ -83,3 +98,9 @@ Use this structure:
 ```
 
 For each finding include: file, line or symbol, problem, why it matters, and a concrete fix.
+
+## Avoid
+
+- Do not bury high-risk findings below summaries.
+- Do not recommend broad rewrites when a local fix resolves the issue.
+- Do not weaken lints or tests without a clear compatibility reason.

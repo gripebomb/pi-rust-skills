@@ -11,15 +11,16 @@ Use this skill for Rust projects targeting WebAssembly for browser apps, Node pa
 
 ## Workflow
 
-1. Confirm target environment: browser, Node, bundler, no-bundler, WASI, or embedded runtime.
-2. Add the correct crate type:
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Confirm target environment: browser, Node, bundler, no-bundler, WASI, or embedded runtime.
+3. Add the correct crate type:
    ```toml
    [lib]
    crate-type = ["cdylib", "rlib"]
    ```
-3. Keep the core logic platform-neutral. Put browser bindings behind a thin `wasm-bindgen` layer.
-4. Minimize boundary crossings between JavaScript and Rust.
-5. Validate both native tests for core logic and wasm-specific tests for bindings.
+4. Keep the core logic platform-neutral. Put browser bindings behind a thin `wasm-bindgen` layer.
+5. Minimize boundary crossings between JavaScript and Rust.
+6. Validate both native tests for core logic and wasm-specific tests for bindings.
 
 ## Common setup
 
@@ -46,6 +47,8 @@ wasm-pack build --target bundler
 wasm-pack build --target nodejs
 ```
 
+Choose `web` for browser-native loading, `bundler` for Vite/Webpack/Rollup packages, and `nodejs` for Node consumers and CI tests.
+
 ## Design rules
 
 - Avoid exposing complex Rust lifetimes across the wasm boundary.
@@ -53,6 +56,8 @@ wasm-pack build --target nodejs
 - Keep panics visible during development with `console_error_panic_hook` when appropriate.
 - Watch binary size. Review dependencies, feature flags, and `wee_alloc` only if justified.
 - Avoid assuming browser APIs exist in Node or test environments.
+- Generate TypeScript declarations when publishing JS-facing packages.
+- Keep feature gates clear for native-only and wasm-only dependencies.
 
 ## Testing
 
@@ -69,6 +74,8 @@ wasm-pack test --node
 wasm-pack test --headless --firefox
 ```
 
+Use `wasm-bindgen-test` for binding behavior and native `cargo test` for platform-neutral logic.
+
 ## Optimization
 
 For release builds:
@@ -83,6 +90,14 @@ panic = "abort"
 
 Use `wasm-opt` only after confirming it is installed and appropriate for the pipeline.
 
+Set a size budget when package size matters, and compare the generated `.wasm` artifact before and after dependency or profile changes.
+
 ## Output expectations
 
 State the selected wasm target, JS integration path, files changed, build/test commands, and any size or compatibility tradeoffs.
+
+## Avoid
+
+- Do not expose complex lifetimes or Rust-only types across the JS boundary.
+- Do not assume browser APIs in Node targets or CI.
+- Do not add wasm size optimizations before measuring the artifact.

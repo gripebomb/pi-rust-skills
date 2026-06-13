@@ -11,17 +11,19 @@ Use this skill when Rust code fails to compile, tests fail, a panic occurs, or b
 
 ## Workflow
 
-1. Capture the exact failing command and full error output.
-2. Identify the failure class:
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Capture the exact failing command and full error output.
+3. Identify the failure class:
    - Compiler error.
    - Borrow checker or lifetime issue.
    - Trait bound or type inference issue.
    - Cargo dependency, feature, or workspace issue.
    - Test assertion failure.
    - Runtime panic or logic bug.
-3. Reduce the problem to the smallest relevant module, function, or test.
-4. Apply the narrowest fix that preserves intent.
-5. Re-run the original failing command and then the broader validation suite.
+   - Proc macro, build script, generated code, or target-specific failure.
+4. Reduce the problem to the smallest relevant module, function, feature set, target, or test.
+5. Apply the narrowest fix that preserves intent.
+6. Re-run the original failing command and then the broader validation suite.
 
 ## Useful commands
 
@@ -34,6 +36,14 @@ cargo metadata --format-version 1
 cargo clean -p crate_name
 ```
 
+For workspaces, prefer package-scoped commands while isolating the problem:
+
+```bash
+cargo check -p crate_name --all-targets --all-features
+cargo test -p crate_name test_name -- --nocapture
+cargo check --target target-triple
+```
+
 For macro-heavy or generated code:
 
 ```bash
@@ -41,6 +51,16 @@ cargo expand package_or_module
 ```
 
 Use `cargo expand` only if installed or worth installing.
+
+Use `cargo bisect-rustc` only when a compiler regression is plausible and the issue cannot be explained by project changes.
+
+## Triage notes
+
+- For proc macro failures, inspect expanded code and the compile-fail test if one exists.
+- For `build.rs` failures, inspect environment variables, native toolchain assumptions, generated files, and rerun directives.
+- For feature conflicts, compare `cargo tree -e features` output for the failing and passing commands.
+- For target-specific failures, confirm `cfg` branches, target dependencies, linker settings, and installed targets.
+- Prefer a small reproducer in a temporary crate when dependency, compiler, or macro behavior is unclear.
 
 ## Borrow checker strategy
 
@@ -63,6 +83,12 @@ Use `cargo expand` only if installed or worth installing.
 - Search for `unwrap`, `expect`, indexing, `panic!`, `todo!`, and `unreachable!`.
 - Add context-rich errors rather than silently defaulting.
 - For tests, assert the expected error rather than accepting any failure.
+
+## Avoid
+
+- Do not hide errors with broad defaults, extra clones, or relaxed trait bounds.
+- Do not weaken tests, lints, or feature coverage to make a failure disappear.
+- Do not rewrite unrelated working code while isolating the root cause.
 
 ## Output expectations
 

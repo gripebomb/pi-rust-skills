@@ -11,17 +11,18 @@ Use this skill for non-trivial Rust refactors where behavior must stay stable wh
 
 ## Workflow
 
-1. Establish baseline validation before changes:
+1. Inspect `Cargo.toml`, workspace shape, feature flags, target crates, and `rust_project_context` output when available.
+2. Establish baseline validation before changes:
    ```bash
    cargo fmt --check
-   cargo clippy --all-targets --all-features -- -D warnings
-   cargo test --all-features
+   cargo clippy --workspace --all-targets --all-features -- -D warnings
+   cargo test --workspace --all-features
    ```
-2. Identify public API and compatibility constraints.
-3. Make refactors in small mechanical steps.
-4. Keep tests passing between steps when possible.
-5. Separate behavior changes from structure changes.
-6. Document migration notes for users or future agents.
+3. Identify public API and compatibility constraints.
+4. Make refactors in small mechanical steps.
+5. Keep tests passing between steps when possible.
+6. Separate behavior changes from structure changes.
+7. Document migration notes for users or future agents.
 
 ## Common refactors
 
@@ -30,6 +31,7 @@ Use this skill for non-trivial Rust refactors where behavior must stay stable wh
 - Move types first, then functions.
 - Re-export public API from the old module if compatibility matters.
 - Keep visibility narrow: prefer `pub(crate)` over `pub`.
+- Add deprecation notes before removing old public paths unless a breaking change is intended.
 
 ### Convert binary logic into library logic
 
@@ -65,6 +67,13 @@ cargo test --all-features
 
 Review changelog for breaking behavior, not just compiler errors.
 
+## API compatibility
+
+- Use `cargo semver-checks` when installed for public libraries.
+- Compare docs, exported types, trait bounds, feature flags, and re-exports before and after the refactor.
+- Keep compatibility re-exports until downstream users have a migration path.
+- Stage large migrations as mechanical move, compatibility shim, behavior change, then cleanup.
+
 ## Refactor safety rules
 
 - Do not rewrite working Rust into clever Rust.
@@ -72,7 +81,14 @@ Review changelog for breaking behavior, not just compiler errors.
 - Avoid introducing generics unless reuse is proven.
 - Keep public names stable unless a breaking change is requested.
 - If tests are weak, add characterization tests before refactoring.
+- Review dependency changelogs before changing major versions or feature defaults.
 
 ## Output expectations
 
 Summarize baseline status, refactor steps completed, behavior changes if any, validation results, and follow-up cleanup tickets.
+
+## Avoid
+
+- Do not mix mechanical moves with behavior changes in the same step.
+- Do not remove compatibility shims without calling out the breaking change.
+- Do not accept a green narrow test when public API or workspace behavior changed.
