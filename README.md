@@ -115,48 +115,6 @@ Pi discovers resources through the `pi` manifest in `package.json`:
 }
 ```
 
-## Publishing to npm
-
-Before publishing, update these fields in `package.json`:
-
-- `name` if you want a scoped package, for example `@gripebomb/pi-rust-skills`.
-- `author`.
-- `repository`, `homepage`, and `bugs`.
-- `version`.
-
-Then run:
-
-```bash
-npm test
-npm pack --dry-run
-npm login
-npm publish --access public
-```
-
-After npm publication, install through Pi:
-
-```bash
-pi install npm:pi-rust-skills
-```
-
-If you publish as a scoped package:
-
-```bash
-pi install npm:@gripebomb/pi-rust-skills
-```
-
-## Getting listed on pi.dev/packages
-
-Pi's package catalog displays npm packages tagged with the `pi-package` keyword. This package already includes that keyword and a `pi` manifest.
-
-The catalog appears to crawl npm metadata; after publishing, allow time for the package page to update. Use a clear npm description because the catalog shows package names, descriptions, resource types, npm links, repository links, and install commands.
-
-## Security notes
-
-Pi packages can execute code and influence agent behavior. This package keeps the bundled extension read-only and uses skills as instruction files, but users should still review package contents before installing.
-
-The `rust_project_context` tool runs read-only commands such as `rustc --version`, `cargo --version`, `cargo metadata --no-deps`, and optionally `cargo tree -e features`.
-
 ## License
 
 MIT
