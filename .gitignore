@@ -9,3 +9,5 @@ docs/
 docs/plans/
 .worktrees
 .worktrees/
+.commandcode
+.commandcode/
