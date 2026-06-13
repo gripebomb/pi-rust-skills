@@ -12,3 +12,7 @@
 - Added Rust project context extension tool.
 - Added 13 Rust skills covering project bootstrap, code review, debugging, testing, Tokio async, CLI, WASM, FFI, performance, security, crate publishing, refactoring, and CI/toolchain setup.
 - Added validation and skill listing scripts.
+
+## 0.1.1
+
+- Updated README documentation.
